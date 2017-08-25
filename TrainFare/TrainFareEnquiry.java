@@ -126,7 +126,7 @@ public class TrainFareEnquiry extends AppCompatActivity {
                 ReusableCode key = new ReusableCode();
                 String APIKey = key.APIKey;
 
-                String url = "http://api.railwayapi.com/route/train/" + train_no + "/apikey/" + APIKey + "/";
+                String url = "http://api.railwayapi.com/v2/route/train/" + train_no + "/apikey/" + APIKey + "/";
                 getStations(url);
                 return;
             }
@@ -156,7 +156,7 @@ public class TrainFareEnquiry extends AppCompatActivity {
                 ReusableCode reusableCode1=new ReusableCode();
                 String apikey=reusableCode1.APIKey;
 
-                String url=" http://api.railwayapi.com/fare/train/"+num[0]+"/source/"+src[1]+"/dest/"+dst[1]+"/age/"+personage+"/quota/"+qut[0]+"/doj/"+journydate+"/apikey/"+apikey;
+                String url=" http://api.railwayapi.com/v2/fare/train/"+num[0]+"/source/"+src[1]+"/dest/"+dst[1]+"/age/"+personage+"/quota/"+qut[0]+"/date/"+journydate+"/apikey/"+apikey;
 
                 getJsonResult(url);
 
@@ -174,7 +174,6 @@ public class TrainFareEnquiry extends AppCompatActivity {
             public void onResponse(JSONObject response) {
                 try {
                     String code=response.getString("response_code");
-                    String failure_rate=response.getString("failure_rate");
                     if(code.equals("200"))
                     {
                         if(!isPanelShown) {
@@ -201,7 +200,7 @@ public class TrainFareEnquiry extends AppCompatActivity {
                             trainsArray.add(i,trainArrive);
                         }
 
-                        trainname.setText(response.getJSONObject("train").getString("number")+" - "+response.getJSONObject("train").getString("name"));
+                        trainname.setText(response.getJSONObject("train").getString("number"));
                         to.setText("To: "+response.getJSONObject("to").getString("code"));
                         from.setText("From: "+response.getJSONObject("from").getString("code"));
                         quotaname.setText("Quota: "+response.getJSONObject("quota").getString("code"));
@@ -209,11 +208,6 @@ public class TrainFareEnquiry extends AppCompatActivity {
 
                         return;
 
-                    }
-                    else if(failure_rate.equals("100"))
-                    {
-                        Toast.makeText(getApplicationContext(),"Check your data or Try again later..",Toast.LENGTH_SHORT).show();
-                        return;
                     }
                     else if(code.equals("404"))
                     {

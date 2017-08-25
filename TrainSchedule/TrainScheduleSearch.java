@@ -96,7 +96,7 @@ public class TrainScheduleSearch extends AppCompatActivity {
                 String APIKey = key.APIKey;
 
                 String number[] = trainno.getText().toString().trim().split("-");
-                String url = "http://api.railwayapi.com/route/train/" + number[0] + "/apikey/" + APIKey + "/";
+                String url = "http://api.railwayapi.com/v2/route/train/" + number[0] + "/apikey/" + APIKey + "/";
                 getJsonObject(url);
             }
         });
@@ -146,7 +146,6 @@ public class TrainScheduleSearch extends AppCompatActivity {
                                 relativeLayout.setVisibility(View.VISIBLE);
                                 isPanelShown = true;
                             }
-                            relativeLayout.setVisibility(View.VISIBLE);
                             tableLayout.removeAllViews();
                             ArrayList<TrainScheduleClass> trainScheduleArray=new ArrayList<TrainScheduleClass>();
                             JSONArray jsonArray=response.getJSONArray("route");

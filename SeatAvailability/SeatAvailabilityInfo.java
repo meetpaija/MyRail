@@ -21,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TableLayout;
@@ -136,7 +137,7 @@ public class SeatAvailabilityInfo extends AppCompatActivity {
                 ReusableCode key = new ReusableCode();
                 String APIKey = key.APIKey;
 
-                String url = "http://api.railwayapi.com/route/train/" + train_no + "/apikey/" + APIKey + "/";
+                String url = "http://api.railwayapi.com/v2/route/train/" + train_no + "/apikey/" + APIKey + "/";
                 getStations(url);
                 return;
             }
@@ -165,7 +166,7 @@ public class SeatAvailabilityInfo extends AppCompatActivity {
                 ReusableCode reusableCode1=new ReusableCode();
                 String apikey=reusableCode1.APIKey;
 
-                String url=" http://api.railwayapi.com/check_seat/train/"+num[0]+"/source/"+src[1]+"/dest/"+dst[1]+"/date/"+journydate+"/class/"+cls[1]+"/quota/"+qut[0]+"/apikey/"+apikey;
+                String url=" http://api.railwayapi.com/v2/check-seat/train/"+num[0]+"/source/"+src[1]+"/dest/"+dst[1]+"/date/"+journydate+"/class/"+cls[1]+"/quota/"+qut[0]+"/apikey/"+apikey;
 
                 getJsonResult(url);
 
@@ -209,11 +210,11 @@ public class SeatAvailabilityInfo extends AppCompatActivity {
                             trainsArray.add(i,trainArrive);
                         }
 
-                        trainname.setText(response.getJSONObject("train").getString("number")+" - "+response.getJSONObject("train").getString("name"));
+                        trainname.setText(response.getString("train_number")+" - "+response.getString("train_name"));
                         to.setText("To: "+response.getJSONObject("to").getString("code"));
                         from.setText("From: "+response.getJSONObject("from").getString("code"));
                         quotaname.setText("Quota: "+response.getJSONObject("quota").getString("code"));
-                        classname.setText("Class: "+response.getJSONObject("travel_class").getString("code"));
+                        classname.setText("Class: "+response.getJSONObject("journey_class").getString("code"));
                         createTableRow(trainsArray);
 
                         return;

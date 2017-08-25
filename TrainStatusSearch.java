@@ -137,7 +137,7 @@ public class TrainStatusSearch extends AppCompatActivity {
                 ReusableCode key = new ReusableCode();
                 String APIKey = key.APIKey;
 
-                String url = "http://api.railwayapi.com/route/train/" + train_no + "/apikey/" + APIKey + "/";
+                String url = "http://api.railwayapi.com/v2/route/train/" + train_no + "/apikey/" + APIKey + "/";
                 getJsonObject(url);
                 return;
             }
@@ -164,7 +164,7 @@ public class TrainStatusSearch extends AppCompatActivity {
         String datetv=date.getText().toString().trim();
 
         String spliteddate[]=datetv.split("-");
-        String url="http://api.railwayapi.com/live/train/"+number[0]+"/doj/"+spliteddate[2]+spliteddate[1]+spliteddate[0]+"/apikey/"+APIKey+"/";
+        String url="http://api.railwayapi.com/v2/live/train/"+number[0]+"/date/"+spliteddate[0]+"-"+spliteddate[1]+"-"+spliteddate[2]+"/apikey/"+APIKey+"/";
 
         getJsonStatus(url);
         return;

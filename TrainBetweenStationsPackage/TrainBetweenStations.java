@@ -122,7 +122,7 @@ FloatingActionButton fab;
                 ReusableCode reusableCode1=new ReusableCode();
                 String apikey=reusableCode1.APIKey;
 
-                String url="http://api.railwayapi.com/between/source/"+sourcecode+"/dest/"+destcode+"/date/"+spliteddate[0]+"-"+spliteddate[1]+"/apikey/"+apikey;
+                String url="http://api.railwayapi.com/v2/between/source/"+sourcecode+"/dest/"+destcode+"/date/"+spliteddate[0]+"-"+spliteddate[1]+"-"+spliteddate[2]+"/apikey/"+apikey;
 
                 getJsonResult(url);
             }
@@ -141,7 +141,6 @@ FloatingActionButton fab;
                     String code=response.getString("response_code");
                     if(code.equals("200"))
                     {
-                        if(TextUtils.isEmpty(response.getString("error"))) {
 
                             if(!isPanelShown) {
                                 // Show the panel
@@ -151,16 +150,16 @@ FloatingActionButton fab;
                                 rl2.startAnimation(bottomUp);
                                 rl2.setVisibility(View.VISIBLE);
                                 isPanelShown = true;
+                               // Toast.makeText(getApplicationContext(),"hi",Toast.LENGTH_SHORT).show();
                             }
 
-                            progress.setVisibility(View.VISIBLE);
                             tableLayout.removeAllViews();
                             ArrayList<TrainBetweenStationClass> trainsArray = new ArrayList<TrainBetweenStationClass>();
 
-                            JSONArray jsonArray = response.getJSONArray("train");
+                            JSONArray jsonArray = response.getJSONArray("trains");
                             for (int i = 0; i < jsonArray.length(); i++) {
 
-                                String no = jsonArray.getJSONObject(i).getString("no");
+                                String no = String.valueOf(i+1);
                                 String train_no = jsonArray.getJSONObject(i).getString("number");
                                 String train_name = jsonArray.getJSONObject(i).getString("name");
                                 String src_dept_time=jsonArray.getJSONObject(i).getString("src_departure_time");
@@ -175,7 +174,7 @@ FloatingActionButton fab;
                                 for(int j=0;j<jsonArray1.length();j++)
                                 {
                                     if(jsonArray1.getJSONObject(j).getString("available").equals("Y")) {
-                                        classes = classes + new String(" " + jsonArray1.getJSONObject(j).getString("class-code"));
+                                        classes = classes + new String(" " + jsonArray1.getJSONObject(j).getString("code"));
                                     }
                                 }
 
@@ -191,7 +190,7 @@ FloatingActionButton fab;
                             createTableRow(trainsArray);
                             progress.setVisibility(View.GONE);
                             return;
-                        }
+
                     }
                     else if(code.equals("204"))
                     {

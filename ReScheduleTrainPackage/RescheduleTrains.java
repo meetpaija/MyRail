@@ -1,5 +1,7 @@
-package com.example.meetpaija.myrail.TrainArrive;
+package com.example.meetpaija.myrail.ReScheduleTrainPackage;
 
+import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.support.design.widget.FloatingActionButton;
@@ -8,15 +10,12 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Html;
-import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.ProgressBar;
+import android.widget.DatePicker;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -35,10 +34,10 @@ import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.meetpaija.myrail.CancellTrainPackage.CancellTrain;
+import com.example.meetpaija.myrail.CancellTrainPackage.CancellTrainClass;
 import com.example.meetpaija.myrail.R;
 import com.example.meetpaija.myrail.ReusableCode;
-import com.example.meetpaija.myrail.TrainBetweenStationsPackage.TrainBetweenStationClass;
-import com.example.meetpaija.myrail.TrainBetweenStationsPackage.TrainBetweenStations;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,80 +45,64 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import co.ceryle.radiorealbutton.RadioRealButton;
-import co.ceryle.radiorealbutton.RadioRealButtonGroup;
-
-public class TrainArriveAtStation extends AppCompatActivity {
-
-    RelativeLayout rl2;
-    AutoCompleteTextView station;
-    FloatingActionButton fab;
-    TextView stationname;
-    ProgressBar progressBar;
-    RadioRealButton button1,button2;
-    RadioRealButtonGroup group;
+public class RescheduleTrains extends AppCompatActivity {
+    private boolean isPanelShown;
+    int year_x,month_x,day_x;
+    static final int dialog_id=0;
+    TextView date;
     TableLayout tableLayout;
-    boolean isPanelShown;
-
+    RelativeLayout rl2;
+    FloatingActionButton fab;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_train_arrive_at_station);
+        setContentView(R.layout.activity_reschedule_trains);
         ActionBar actionBar=getSupportActionBar();
-        actionBar.setTitle("Trains Arrive At Station");
+        actionBar.setTitle("Reschedule Trains");
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        rl2=(RelativeLayout)findViewById(R.id.rl2);
-        station=(AutoCompleteTextView)findViewById(R.id.stationinput);
-        fab=(FloatingActionButton)findViewById(R.id.fab);
-        progressBar=(ProgressBar)findViewById(R.id.progressbar);
-        tableLayout=(TableLayout)findViewById(R.id.table_main);
-        stationname=(TextView)findViewById(R.id.stationname);
-
-        ReusableCode reusableCode=new ReusableCode();
-        String stations[]=reusableCode.StationName;
-
-        ArrayAdapter arrayAdapter=new ArrayAdapter(this,android.R.layout.select_dialog_item,stations);
-
-        station.setThreshold(2);
-        station.setAdapter(arrayAdapter);
         isPanelShown=false;
+        rl2=(RelativeLayout)findViewById(R.id.rl2);
+        fab=(FloatingActionButton) findViewById(R.id.fab);
+        date=(TextView)findViewById(R.id.date);
+        tableLayout=(TableLayout)findViewById(R.id.table_main);
 
-        button1 = (RadioRealButton) findViewById(R.id.button1);
-        button2 = (RadioRealButton) findViewById(R.id.button2);
-        group=(RadioRealButtonGroup)findViewById(R.id.group);
+        date.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDialog(dialog_id);
+                return;
+            }
+        });
+
+        java.util.Calendar cal=java.util.Calendar.getInstance();
+
+        year_x=cal.get(java.util.Calendar.YEAR);
+        month_x=cal.get(java.util.Calendar.MONTH);
+        day_x=cal.get(java.util.Calendar.DAY_OF_MONTH);
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                if(!validate())
-                    return;
-
-                String s[]=station.getText().toString().toLowerCase().split("-");
-
-                String stationcode=s[1].replaceAll("\\s+", "").trim();
-                Integer hour=0;
-
-                if(button1.isChecked())
-                    hour=2;
-                else
-                    hour=4;
-
-                ReusableCode reusableCode1=new ReusableCode();
-                String apikey=reusableCode1.APIKey;
-
-                String url="http://api.railwayapi.com/v2/arrivals/station/"+stationcode+"/hours/"+hour+"/apikey/"+apikey;
-
-                getJsonResult(url);
-
+                showtrains();
             }
         });
-
     }
+    private void showtrains() {
+        if(!valid())
+            return;
 
-    private void getJsonResult(String url) {
+        ReusableCode key = new ReusableCode();
+        String APIKey = key.APIKey;
 
+        String datetv=date.getText().toString().trim();
+
+        String url="http://api.railwayapi.com/v2/rescheduled/date/"+datetv+"/apikey/"+APIKey+"/";
+
+        getJsonStatus(url);
+        return;
+    }
+    private void getJsonStatus(String url) {
         RequestQueue requestQueue2 = Volley.newRequestQueue(getApplicationContext());
 
         JsonObjectRequest jsonObjectRequest2 = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
@@ -129,53 +112,35 @@ public class TrainArriveAtStation extends AppCompatActivity {
                     String code=response.getString("response_code");
                     if(code.equals("200"))
                     {
-                            if(!isPanelShown) {
-                                // Show the panel
-                                Animation bottomUp = AnimationUtils.loadAnimation(TrainArriveAtStation.this,
-                                        R.anim.bottom_up);
+                        if(!isPanelShown) {
+                            // Show the panel
+                            Animation bottomUp = AnimationUtils.loadAnimation(getApplicationContext(),
+                                    R.anim.bottom_up);
 
-                                rl2.startAnimation(bottomUp);
-                                rl2.setVisibility(View.VISIBLE);
-                                isPanelShown = true;
-                            }
+                            rl2.startAnimation(bottomUp);
+                            rl2.setVisibility(View.VISIBLE);
+                            isPanelShown = true;
+                        }
+                        tableLayout.removeAllViews();
+                        ArrayList<RescheduleTrainClass> trainScheduleArray=new ArrayList<RescheduleTrainClass>();
+                        JSONArray jsonArray=response.getJSONArray("trains");
+                        for (int i=0; i< jsonArray.length();i++) {
 
-                            progressBar.setVisibility(View.VISIBLE);
-                            tableLayout.removeAllViews();
-                            ArrayList<TrainArriveClass> trainsArray = new ArrayList<TrainArriveClass>();
+                            String no=String.valueOf(i+1);
+                            String num=jsonArray.getJSONObject(i).getString("number");
+                            String name=jsonArray.getJSONObject(i).getString("name");
+                            String to=jsonArray.getJSONObject(i).getJSONObject("to").getString("name")+"-"+jsonArray.getJSONObject(i).getJSONObject("to").getString("code");
+                            String from=jsonArray.getJSONObject(i).getJSONObject("from").getString("name")+"-"+jsonArray.getJSONObject(i).getJSONObject("from").getString("code");
+                            String redate=jsonArray.getJSONObject(i).getString("rescheduled_date");
+                            String retime=jsonArray.getJSONObject(i).getString("rescheduled_time");
+                            String time_diff=jsonArray.getJSONObject(i).getString("time_diff");
+                            RescheduleTrainClass trainScheduleClass=new RescheduleTrainClass(no,num,name,to,from,redate,retime,time_diff);
+                            trainScheduleArray.add(i,trainScheduleClass);
 
-                            JSONArray jsonArray = response.getJSONArray("trains");
-                            for (int i = 0; i < jsonArray.length(); i++) {
+                        }
 
-                                String no = String.valueOf(i+1);
-                                String train_no = jsonArray.getJSONObject(i).getString("number");
-                                String train_name = jsonArray.getJSONObject(i).getString("name");
-                                String scharr=jsonArray.getJSONObject(i).getString("scharr");
-                                String schdep=jsonArray.getJSONObject(i).getString("schdep");
-                                String actarr= jsonArray.getJSONObject(i).getString("actarr");
-                                String actdep= jsonArray.getJSONObject(i).getString("actdep");
-                                String delayarr = jsonArray.getJSONObject(i).getString("delayarr");
-                                String delaydep = jsonArray.getJSONObject(i).getString("delaydep");
-
-                                TrainArriveClass trainArrive=new TrainArriveClass(no,train_no,train_name,scharr,actarr,schdep,actdep,delayarr,delaydep);
-                                trainsArray.add(i,trainArrive);
-
-                            }
-                        Integer hour=0;
-
-                        if(button1.isChecked())
-                            hour=2;
-                        else
-                            hour=4;
-
-                        String s[]=station.getText().toString().toLowerCase().split("-");
-
-                        String stationcode=s[1].replaceAll("\\s+", "").trim();
-
-                            stationname.setText("These all trains will arrive within "+hour+" hours at "+stationcode+"." );
-
-                            createTableRow(trainsArray);
-                            progressBar.setVisibility(View.GONE);
-                            return;
+                        creatrow(trainScheduleArray);
+                        return;
 
                     }
                     else if(code.equals("204"))
@@ -205,7 +170,7 @@ public class TrainArriveAtStation extends AppCompatActivity {
                     }
                     else if(code.equals("405"))
                     {
-                        AlertDialog.Builder aleart=new AlertDialog.Builder(TrainArriveAtStation.this);
+                        AlertDialog.Builder aleart=new AlertDialog.Builder(RescheduleTrains.this);
                         aleart.setTitle(Html.fromHtml("<font color='#4d587b'>Update Require..</font>"));
                         aleart.setMessage("Account Expired , Update Your Application Now...");
                         aleart.setPositiveButton("Update", new DialogInterface.OnClickListener() {
@@ -271,11 +236,9 @@ public class TrainArriveAtStation extends AppCompatActivity {
             }
         });
         requestQueue2.add(jsonObjectRequest2);
-
     }
 
-    private void createTableRow(ArrayList<TrainArriveClass> trainsArray) {
-
+    private void creatrow(ArrayList<RescheduleTrainClass> TrainDetails) {
         TableLayout stk = (TableLayout) findViewById(R.id.table_main);
         TableRow tbrow0 = new TableRow(this);
         tbrow0.setBackgroundColor(Color.BLACK);
@@ -286,124 +249,139 @@ public class TrainArriveAtStation extends AppCompatActivity {
         tbrow0.addView(tv0);
         TextView tv1 = new TextView(this);
         tv1.setGravity(Gravity.CENTER);
-        tv1.setText(" Train_Number ");
+        tv1.setText(" Number ");
         tv1.setTextColor(Color.WHITE);
         tbrow0.addView(tv1);
         TextView tv2 = new TextView(this);
         tv2.setGravity(Gravity.CENTER);
-        tv2.setText(" Train_Name ");
+        tv2.setText(" Name ");
         tv2.setTextColor(Color.WHITE);
         tbrow0.addView(tv2);
         TextView tv3 = new TextView(this);
-        tv3.setText(" Sch_Arr_Time ");
+        tv3.setText(" From ");
         tv3.setGravity(Gravity.CENTER);
         tv3.setTextColor(Color.WHITE);
         tbrow0.addView(tv3);
         TextView tv4 = new TextView(this);
-        tv4.setText(" Sch_Dep_Time ");
+        tv4.setText(" To ");
         tv4.setGravity(Gravity.CENTER);
         tv4.setTextColor(Color.WHITE);
         tbrow0.addView(tv4);
         TextView tv5 = new TextView(this);
-        tv5.setText(" Act_Arr_Time ");
+        tv5.setText(" Rescheduled_Date ");
         tv5.setGravity(Gravity.CENTER);
         tv5.setTextColor(Color.WHITE);
         tbrow0.addView(tv5);
         TextView tv6 = new TextView(this);
-        tv6.setText(" Act_Dep_Time ");
+        tv6.setText(" Rescheduled_Time ");
         tv6.setGravity(Gravity.CENTER);
         tv6.setTextColor(Color.WHITE);
         tbrow0.addView(tv6);
         TextView tv7 = new TextView(this);
-        tv7.setText(" Delay_Arr_Time ");
+        tv7.setText(" Time_Difference ");
         tv7.setGravity(Gravity.CENTER);
         tv7.setTextColor(Color.WHITE);
         tbrow0.addView(tv7);
-        TextView tv8 = new TextView(this);
-        tv8.setText(" Delay_Dep_Time ");
-        tv8.setGravity(Gravity.CENTER);
-        tv8.setTextColor(Color.WHITE);
-        tbrow0.addView(tv8);
         stk.addView(tbrow0);
 
-        for (int i = 0; i < trainsArray.size(); i++) {
+        for (int i = 0; i < TrainDetails.size(); i++) {
             TableRow tbrow = new TableRow(this);
             TextView t1v = new TextView(this);
-            t1v.setText(" "+trainsArray.get(i).no+" ");
+            t1v.setText(" "+TrainDetails.get(i).no+" ");
             t1v.setTextColor(Color.WHITE);
             t1v.setGravity(Gravity.CENTER);
             tbrow.addView(t1v);
             TextView t2v = new TextView(this);
-            t2v.setText(" "+trainsArray.get(i).train_no+" ");
+            t2v.setText(" "+TrainDetails.get(i).num+" ");
             t2v.setGravity(Gravity.CENTER);
             t2v.setTextColor(Color.WHITE);
             tbrow.addView(t2v);
             TextView t3v = new TextView(this);
-            t3v.setText(" "+trainsArray.get(i).train_name+" ");
+            t3v.setText(" "+TrainDetails.get(i).name+" ");
             t3v.setGravity(Gravity.CENTER);
             t3v.setTextColor(Color.WHITE);
             tbrow.addView(t3v);
             TextView t4v = new TextView(this);
-            t4v.setText(" "+trainsArray.get(i).scharr+" ");
+            t4v.setText(" "+TrainDetails.get(i).from+" ");
             t4v.setGravity(Gravity.CENTER);
             t4v.setTextColor(Color.WHITE);
             tbrow.addView(t4v);
             TextView t5v = new TextView(this);
-            t5v.setText(" "+trainsArray.get(i).schdep+" ");
+            t5v.setText(" "+TrainDetails.get(i).to+" ");
             t5v.setGravity(Gravity.CENTER);
             t5v.setTextColor(Color.WHITE);
             tbrow.addView(t5v);
             TextView t6v = new TextView(this);
-            t6v.setText(" "+trainsArray.get(i).actarr+" ");
+            t6v.setText(" "+TrainDetails.get(i).rescheduled_date+" ");
             t6v.setGravity(Gravity.CENTER);
             t6v.setTextColor(Color.WHITE);
             tbrow.addView(t6v);
             TextView t7v = new TextView(this);
-            t7v.setText(" "+trainsArray.get(i).actdep+" ");
+            t7v.setText(" "+TrainDetails.get(i).rescheduled_time+" ");
             t7v.setGravity(Gravity.CENTER);
             t7v.setTextColor(Color.WHITE);
             tbrow.addView(t7v);
             TextView t8v = new TextView(this);
-            t8v.setText(" "+trainsArray.get(i).delayarr+" ");
+            t8v.setText(" "+TrainDetails.get(i).time_diff+" ");
             t8v.setGravity(Gravity.CENTER);
             t8v.setTextColor(Color.WHITE);
             tbrow.addView(t8v);
-            TextView t9v = new TextView(this);
-            t9v.setText(" "+trainsArray.get(i).delaydep+" ");
-            t9v.setGravity(Gravity.CENTER);
-            t9v.setTextColor(Color.WHITE);
-            tbrow.addView(t9v);
             stk.addView(tbrow);
         }
-
     }
 
-    private boolean validate() {
+    private boolean valid() {
         boolean flag=true;
+        date=(TextView)findViewById(R.id.date);
 
-        String s=station.getText().toString().toLowerCase().trim();
+        String datetv=date.getText().toString().trim();
 
-        if(TextUtils.isEmpty(s))
+        if(datetv.equals("Tap here to select the date"))
         {
-            station.setError("Station name is required");
-            flag=false;
-        }
-        else if(!s.contains("-"))
-        {
-            station.setError("Select the Station from the List..");
-            flag=false;
-        }
-        else if(!button1.isChecked() && !button2.isChecked()) {
-            Toast.makeText(TrainArriveAtStation.this, "Select any hour first..", Toast.LENGTH_SHORT).show();
-            flag=false;
+            Toast.makeText(getApplicationContext(),"please select the date",Toast.LENGTH_SHORT).show();
+            flag = false;
         }
         else
         {
-            station.setError(null);
             flag=true;
         }
         return flag;
     }
+    @Override
+    protected Dialog onCreateDialog(int id) {
+
+        if(id==dialog_id)
+        {
+            DatePickerDialog dpd= new DatePickerDialog(this,dpickerlistner,year_x,month_x,day_x);
+            return dpd;
+        }
+        return null;
+    }
+
+    private DatePickerDialog.OnDateSetListener dpickerlistner=new DatePickerDialog.OnDateSetListener() {
+        @Override
+        public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+            String day_str;
+            String month_str;
+            year_x=year;
+            if(dayOfMonth<10)
+                day_str='0'+String.valueOf(dayOfMonth);
+            else
+                day_str=String.valueOf(dayOfMonth);
+            if((month+1)<10)
+                month_str='0'+String.valueOf(month+1);
+            else
+                month_str=String.valueOf(month+1);
+
+            String date_x=day_str+"-"+month_str+"-"+year_x;
+            setEditText(date_x);
+        }
+    };
+
+    private void setEditText(String date_x) {
+        date.setText(date_x);
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
