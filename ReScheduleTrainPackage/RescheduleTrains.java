@@ -112,6 +112,7 @@ public class RescheduleTrains extends AppCompatActivity {
                     String code=response.getString("response_code");
                     if(code.equals("200"))
                     {
+
                         if(!isPanelShown) {
                             // Show the panel
                             Animation bottomUp = AnimationUtils.loadAnimation(getApplicationContext(),
